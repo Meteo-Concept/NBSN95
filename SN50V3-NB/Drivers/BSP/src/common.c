@@ -415,6 +415,23 @@ void txPayLoadDeal(SENSOR* Sensor)
 	{
 		sprintf(Sensor->data+strlen(Sensor->data), "%.8x", sensor.exit_count);
 	}
+	else if(sys.mod == model7)
+	{	
+		user_main_printf("rain pulse");
+		MX_I2C1_Init();
+		if(detect_flags == 1)
+			sht20Data();
+		else if(detect_flags == 2)
+			sht31Data();
+    HAL_I2C_MspDeInit(&hi2c1);	
+		HAL_Delay(20);
+
+		sprintf(Sensor->data+strlen(Sensor->data), "%c", (Sensor->temSHT>=0)?'0':'F');
+		sprintf(Sensor->data+strlen(Sensor->data), "%.3x", (Sensor->temSHT>=0)?Sensor->temSHT:Sensor->temSHT*(-1));
+		sprintf(Sensor->data+strlen(Sensor->data), "%.4x", Sensor->humSHT);
+		sprintf(Sensor->data+strlen(Sensor->data), "%.8x", sensor.exit_count);
+		sprintf(Sensor->data+strlen(Sensor->data), "%.4x", sensor.intensity);
+	}
 	sprintf(Sensor->data+strlen(Sensor->data), "%.8x", sensor.time_stamp);
 		
 		int num = sys.sht_seq;
@@ -425,7 +442,7 @@ void txPayLoadDeal(SENSOR* Sensor)
 				num=32+num;
 			uint32_t r_time=*(__IO uint32_t *)(EEPROM_TIME_START_ADD+num*0x04);			
 			
-			if((sys.mod!=model6))
+			if((sys.mod!=model6)&& (sys.mod!=model7))
      {
 			 uint32_t r_ad0_data=*(__IO uint32_t *)(EEPROM_D1_AD0_START_ADD+num*0x04);
 			 sprintf(Sensor->data+strlen(Sensor->data), "%.4x", (r_ad0_data>>16)&0xFFFF);
@@ -434,7 +451,7 @@ void txPayLoadDeal(SENSOR* Sensor)
 				 sprintf(Sensor->data+strlen(Sensor->data), "%.4x", r_ad0_data&0xFFFF);
 			 }
 		 }
-			if((sys.mod==model1)||(sys.mod==model3))
+			if((sys.mod==model1)||(sys.mod==model3)||(sys.mod==model7))
      {
 			uint32_t r_sht_data=*(__IO uint32_t *)(EEPROM_SHT_START_ADD+num*0x04);
 			sprintf(Sensor->data+strlen(Sensor->data), "%.4x", (r_sht_data>>16)&0xFFFF);
@@ -467,6 +484,13 @@ void txPayLoadDeal(SENSOR* Sensor)
 			uint32_t r_count_data=*(__IO uint32_t *)(EEPROM_COUNT_START_ADD+num*0x04);
 			sprintf(Sensor->data+strlen(Sensor->data), "%.8x", r_count_data);
 		}		
+		if (sys.mod==model7)
+		{	
+			uint32_t r_count_data=*(__IO uint32_t *)(EEPROM_COUNT_START_ADD+num*0x04);
+			sprintf(Sensor->data+strlen(Sensor->data), "%.8x", r_count_data);
+			uint32_t r_intensity=*(__IO uint32_t *)(EEPROM_INTENSITY_START_ADD+num*0x04);
+			sprintf(Sensor->data+strlen(Sensor->data), "%.4x", r_intensity&0xFFFF);
+		}		
 			sprintf(Sensor->data+strlen(Sensor->data), "%.8x", r_time);			
 		}				
 	
@@ -492,6 +516,10 @@ void txPayLoadDeal2(SENSOR* Sensor)
 	{
 	user_main_printf("count is %d ",sensor.exit_count);
 	}
+	else if (sys.mod == model7)
+	{
+	user_main_printf("count is %d, intensity is %d",sensor.exit_count, sensor.intensity);
+	}		
 }
 
 
@@ -857,6 +885,8 @@ uint8_t is_ipv6_addr(char *ip)
 	}
  if(count==7)
 	return 1;
+ 
+ return 2;
 }
 
 char* Int2String(int num,char *str)
@@ -927,7 +957,7 @@ void shtDataWrite(void)
 	HAL_FLASHEx_DATAEEPROM_Lock();
 	}
 
-  if(sys.mod !=model6)	
+  if(sys.mod != model6)	
 	{
 	uint32_t w_ad0_d1_data=adc0_datalog<<16 | ((int16_t)(ds1820_value*10)&0xFFFF);	
 	user_main_debug("w_sht_data:%x",w_ad0_d1_data);
@@ -974,7 +1004,15 @@ void shtDataWrite(void)
 	HAL_FLASHEx_DATAEEPROM_Unlock();
 	HAL_FLASHEx_DATAEEPROM_Program(FLASH_TYPEPROGRAMDATA_WORD,EEPROM_COUNT_START_ADD +sys.sht_seq * 0x04,w_count_data);
 	HAL_FLASHEx_DATAEEPROM_Lock();			
-	}		
+	}	
+  	else if(sys.mod ==model7)	
+	{
+	uint32_t w_intensity=sensor.intensity&0x0000FFFF;	
+	user_main_debug("w_intensity:%x",w_intensity);
+	HAL_FLASHEx_DATAEEPROM_Unlock();
+	HAL_FLASHEx_DATAEEPROM_Program(FLASH_TYPEPROGRAMDATA_WORD,EEPROM_INTENSITY_START_ADD +sys.sht_seq * 0x04,w_intensity);
+	HAL_FLASHEx_DATAEEPROM_Lock();			
+	}			
 
 	HAL_FLASHEx_DATAEEPROM_Unlock();
 	HAL_FLASHEx_DATAEEPROM_Program(FLASH_TYPEPROGRAMDATA_WORD,EEPROM_TIME_START_ADD+sys.sht_seq * 0x04,sensor.time_stamp);
@@ -995,6 +1033,7 @@ void shtDataClear(void)
 		HAL_FLASHEx_DATAEEPROM_Erase(EEPROM_DISTANCE_START_ADD+ i * 0x04);	
 		HAL_FLASHEx_DATAEEPROM_Erase(EEPROM_AD1_AD4_START_ADD+ i * 0x04);	
 		HAL_FLASHEx_DATAEEPROM_Erase(EEPROM_COUNT_START_ADD+ i * 0x04);	
+		HAL_FLASHEx_DATAEEPROM_Erase(EEPROM_INTENSITY_START_ADD+ i * 0x04);	
 		HAL_FLASHEx_DATAEEPROM_Erase(EEPROM_WEIGHT_START_ADD+ i * 0x04);	
 	}
 	HAL_FLASHEx_DATAEEPROM_Lock();
@@ -1012,7 +1051,7 @@ void shtDataPrint(void)
 		if(r_time!=0)
 		{		
 			int16_t tem,hum,d1,d2,d3;
-			uint16_t ad0,ad1,ad4,distance;
+			uint16_t ad0,ad1,ad4,distance,intensity;
 			int32_t weight;
 			uint32_t count;
 			if(sys.mod ==model1)
@@ -1088,7 +1127,23 @@ void shtDataPrint(void)
 			count = r_count_data;
 			printf("mod6:count:%d",count);
 			GetTime(r_time);	
-      }			
+      }
+				else if(sys.mod==model7)
+			{
+			uint32_t r_sht_data=*(__IO uint32_t *)(EEPROM_SHT_START_ADD+num*0x04);
+			user_main_debug("r_sht_data:%x",r_sht_data);
+			tem = ((r_sht_data>>16)&0xFFFF);
+			hum = (r_sht_data&0xFFFF);
+				
+			uint32_t r_count_data=*(__IO uint32_t *)(EEPROM_COUNT_START_ADD+num*0x04);
+			user_main_debug("r_count_data:%x",r_count_data);
+			count = r_count_data;
+			uint32_t r_intensity=*(__IO uint32_t *)(EEPROM_INTENSITY_START_ADD+num*0x04);
+			user_main_debug("r_intensity:%x",r_intensity);
+			intensity = r_intensity&0xFFFF;
+				printf("mod7: tem:%.2f hum:%.2f count:%d intensity:%.1f",(float)tem/10.0,(float)hum/10.0,count,(float)intensity/10.0);
+			GetTime(r_time);	
+      }
 		}
 		num++;
 	}
@@ -1121,7 +1176,7 @@ void get_sensorvalue(void)
 {
 		HAL_GPIO_WritePin(Power_5v_GPIO_Port, Power_5v_Pin, GPIO_PIN_RESET);	
 	  HAL_Delay(500+sys.power_time);
-			if((sys.mod==model1)||(sys.mod==model3))
+			if((sys.mod==model1)||(sys.mod==model3)||(sys.mod==model7))
   {
 		MX_I2C1_Init();
     if(detect_flags == 1)
@@ -1131,7 +1186,7 @@ void get_sensorvalue(void)
     HAL_I2C_MspDeInit(&hi2c1);	
 		HAL_Delay(20);
 	}
-			if((sys.mod!=model6))
+			if((sys.mod!=model6)&&(sys.mod!=model7))
   {
 		adc0_datalog = ADCModel(ADC_CHANNEL_4);
 		if((sys.mod!=model3))

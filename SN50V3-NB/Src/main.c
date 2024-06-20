@@ -57,7 +57,7 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
+#define LOCKOUT_INT_DELAY 500
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -109,6 +109,8 @@ uint8_t nds_timer_flag2= 0;
 uint8_t user_key_exti_flag=0;
 extern int32_t cal_time_difference;
 extern bool clock_cal_time_flag;
+
+uint32_t lastCountInt=0;
 
 bool first_clock_flag=0;
 uint8_t first_clock_time=0;
@@ -905,8 +907,24 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	if(GPIO_Pin == GPIO_PIN_15)
 	{		
 		if(sys.mod == model6)
+		{
 			sensor.exit_count++;
-		else if(nb.net_flag == success && sys.mod != model6 && (task_num < _AT_COAP_CONFIG || task_num > _AT_TCP_CLOSE))
+		}
+		else if (sys.mod == model7)
+		{
+			uint32_t diff = TimerGetElapsedTime(lastCountInt);
+      if (diff > LOCKOUT_INT_DELAY)
+      {
+            sensor.exit_count++;
+            lastCountInt = TimerGetCurrentTime();
+            uint16_t newIntensity = 2 * 3600000 / diff;
+            if (newIntensity > sensor.intensity)
+            {
+                 sensor.intensity = newIntensity;
+             }
+       }
+		}
+		else if(nb.net_flag == success && sys.mod != model6 && sys.mod != model7 && (task_num < _AT_COAP_CONFIG || task_num > _AT_TCP_CLOSE))
 		{
 			if(nb.uplink_flag == no_status)
 			{

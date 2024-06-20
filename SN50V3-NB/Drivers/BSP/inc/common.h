@@ -52,6 +52,7 @@ typedef enum
  model4 ,
  model5 ,
  model6 ,
+ model7 ,	
 }model;
 
 typedef struct
@@ -112,6 +113,7 @@ typedef struct
 	uint8_t  	exit_level;
 	uint8_t  	singal;
 	uint32_t 	exit_count;
+	uint16_t  intensity;
 	uint32_t 	time_stamp;
 	int 			temDs18b20_1;
 	int 			temDs18b20_2;

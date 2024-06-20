@@ -144,7 +144,11 @@ ATEerror_t at_mod_set(const char *param)
 	else if(mod == model6)
 	{
 		printf("\r\nCounting mode\r\n");
-	}	
+	}
+	else if (mod == model7)
+	{
+		printf("\r\nCONCEPT-600 mode\r\n");
+	}
 	else
 	{
 		return AT_PARAM_ERROR;
@@ -1116,7 +1120,7 @@ void config_Get(void)
 	}
   add = FLASH_USER_START_ADDR_CONFIG;	
 	sys.mod = FLASH_read(add+8) >>24;
-	if(sys.mod == 0 || sys.mod > model6)
+	if(sys.mod == 0 || sys.mod > model7)
 		sys.mod = model1;
 	
 	sys.tdc = FLASH_read(add+8)  & 0x00FFFFFF;

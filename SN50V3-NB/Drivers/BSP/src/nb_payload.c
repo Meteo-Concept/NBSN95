@@ -64,6 +64,11 @@ void pro_data_thingspeak(void)
 	else if(sys.mod == model6)
 	{
 	sprintf(buff1+strlen(buff1), "field4=%d",sensor.exit_count);		
+	}		
+	else if(sys.mod == model7)
+	{
+	sprintf(buff1+strlen(buff1), "field4=%d",sensor.exit_count);
+	sprintf(buff1+strlen(buff1), "field5=%.1f&field6=%.1f",tem_value,hum_value);			
 	}
 	
 	sprintf(buff+strlen(buff), "%d,%s\r\n",strlen(buff1),buff1);	
@@ -86,7 +91,7 @@ void pro_data(void)
    mode_data(buff);
 		int num = sys.sht_seq;
 		int16_t tem,hum,d1,d2,d3;
-		uint16_t ad0,ad1,ad4,distance;
+		uint16_t ad0,ad1,ad4,distance,intensity;
 		uint32_t count;
 	  int32_t weight;
 		time_t curtime;
@@ -114,7 +119,7 @@ void pro_data(void)
 			memset(mini,0,sizeof(mini));
 			strftime(mini, 80, "%Y/%m/%d %H:%M:%S", info);	
 			
-			if((sys.mod!=model6))
+			if((sys.mod!=model6) && (sys.mod!=model7))
      {
 			 uint32_t r_d1_ad0_data=*(__IO uint32_t *)(EEPROM_D1_AD0_START_ADD+num*0x04);
 			 ad0 = ((r_d1_ad0_data>>16)&0xFFFF);
@@ -123,7 +128,7 @@ void pro_data(void)
 				 d1 = (r_d1_ad0_data&0xFFFF);
 			 }
 		 }
-			if((sys.mod==model1)||(sys.mod==model3))
+			if((sys.mod==model1)||(sys.mod==model3)||(sys.mod==model7))
      {
 			uint32_t r_sht_data=*(__IO uint32_t *)(EEPROM_SHT_START_ADD+num*0x04);
 			tem = ((r_sht_data>>16)&0xFFFF);
@@ -155,7 +160,14 @@ void pro_data(void)
     {	
 			uint32_t r_count_data=*(__IO uint32_t *)(EEPROM_COUNT_START_ADD+num*0x04);
 			count = r_count_data;
-		}					
+		}	
+			else if(sys.mod==model7)
+    {	
+			uint32_t r_count_data=*(__IO uint32_t *)(EEPROM_COUNT_START_ADD+num*0x04);
+			count = r_count_data;
+			uint32_t r_intensity=*(__IO uint32_t *)(EEPROM_INTENSITY_START_ADD+num*0x04);
+			intensity = r_intensity&0xFFFF;
+		}						
 			sprintf(buff+strlen(buff),",\"%d\":",i+1);	
 					if(sys.mod==model1)
        {
@@ -180,6 +192,10 @@ void pro_data(void)
 			 	else if(sys.mod==model6)
        {
 			  sprintf(buff+strlen(buff),"[%d,\"%s\"]",count,mini);	
+		   }
+			 	else if(sys.mod==model7)
+       {
+			  sprintf(buff+strlen(buff),"[%.1f,%.1f,%d,%.1f,\"%s\"]",(float)tem/10.0,(float)hum/10.0,count,(float)intensity/10.0,mini);	
 		   }
 		}	
 			strcat(buff,(char*)"}");	
@@ -246,5 +262,11 @@ sprintf(buff+strlen(buff), "\"interrupt_level\":%d,",sensor.exit_level);
 	else if(sys.mod == model6)
 	{
 	sprintf(buff+strlen(buff), "\"count\":%d",sensor.exit_count);		
+	}			
+	else if(sys.mod == model7)
+	{
+	sprintf(buff+strlen(buff), "\"temperature\":%.1f,\"humidity\":%.1f",tem_value,hum_value);	
+	sprintf(buff+strlen(buff), "\"count\":%d",sensor.exit_count);		
+	sprintf(buff+strlen(buff), "\"intensity\":%.1f",(float)sensor.intensity/10.0);		
 	}	
 }

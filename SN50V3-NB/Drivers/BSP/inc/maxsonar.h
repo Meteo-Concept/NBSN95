@@ -5,7 +5,7 @@
 
 void MAXSONAR_Rest(void);
 int MAXSONAR_Data_processing(void);
-void MAXSONAR_getData();
+void MAXSONAR_getData(void);
 void MAXSONAR_Data_Read(void);
 void MAXSONAR_Init(void (*uart_init)(UART_HandleTypeDef* uartHandle),void (*txs_init)(void));
 void MAXSONAR_DeInit(void(*uart_disable)(UART_HandleTypeDef* uartHandle),void (*txs_deinit)(void));
