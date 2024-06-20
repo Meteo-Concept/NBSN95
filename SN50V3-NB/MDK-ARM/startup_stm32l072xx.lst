@@ -401,7 +401,7 @@ ARM Macro Assembler    Page 7
               00000000 
 Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M0+ --apcs=inter
 work --depend=nbsn95\startup_stm32l072xx.d -onbsn95\startup_stm32l072xx.o -I.\R
-TE\_NBSN95 -ID:\Keil_v5\ARM\ARM\CMSIS\5.9.0\CMSIS\Core\Include -ID:\Keil_v5\ARM
+TE\_NBSN95 -IC:\Keil_v5\RTE\ARM\CMSIS\5.9.0\CMSIS\Core\Include -IC:\Keil_v5\RTE
 \Keil\STM32L0xx_DFP\2.2.0\Drivers\CMSIS\Device\ST\STM32L0xx\Include --predefine
 ="__MICROLIB SETA 1" --predefine="__UVISION_VERSION SETA 538" --predefine="_RTE
 _ SETA 1" --predefine="STM32L072xx SETA 1" --predefine="_RTE_ SETA 1" --list=st
