@@ -139,10 +139,10 @@
           </Flash1>
           <bUseTDR>1</bUseTDR>
           <Flash2>STLink\ST-LINKIII-KEIL_SWO.dll</Flash2>
-          <Flash3></Flash3>
+          <Flash3>"" ()</Flash3>
           <Flash4></Flash4>
           <pFcarmOut></pFcarmOut>
-          <pFcarmGrp></pFcarmGrp>
+          <pFcarmGrp>Application/MDK-ARM</pFcarmGrp>
           <pFcArmRoot></pFcArmRoot>
           <FcArmLst>0</FcArmLst>
         </Utilities>
@@ -341,7 +341,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER, USE_STM32L0XX_NUCLEO,STM32L072xx,SHT3x</Define>
               <Undefine></Undefine>
-              <IncludePath>../Inc;               ../Drivers/STM32L0xx_HAL_Driver/Inc;               ../Drivers/STM32L0xx_HAL_Driver/Inc/Legacy;               ../Drivers/CMSIS/Device/ST/STM32L0xx/Include;               ../Drivers/CMSIS/Include;               ..\Drivers\BSP\inc;               ..\Drivers\LWM2M</IncludePath>
+              <IncludePath>../Inc;../Drivers/STM32L0xx_HAL_Driver/Inc;../Drivers/STM32L0xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32L0xx/Include;../Drivers/CMSIS/Include;..\Drivers\BSP\inc;..\Drivers\LWM2M;..\Middlewares\XCRYPTOLIB\include;..\Middlewares\XCRYPTOLIB\include\mac</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -530,6 +530,11 @@
               <FileName>queue.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Src\queue.c</FilePath>
+            </File>
+            <File>
+              <FileName>cmox_low_level.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\cmox_low_level.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -841,6 +846,16 @@
               <FileName>readMe.txt</FileName>
               <FileType>5</FileType>
               <FilePath>..\NOTES\readMe.txt</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Middlewares/STM32Cryptographic</GroupName>
+          <Files>
+            <File>
+              <FileName>libSTM32Cryptographic_CM0_CM0PLUS.a</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\Middlewares\XCRYPTOLIB\libSTM32Cryptographic_CM0_CM0PLUS.a</FilePath>
             </File>
           </Files>
         </Group>

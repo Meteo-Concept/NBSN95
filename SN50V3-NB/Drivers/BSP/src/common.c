@@ -1,5 +1,8 @@
 #include "common.h"
 #include "nbInit.h"
+#include "cmox_low_level.h"
+#include "cmox_mac.h"
+#include "cmox_hmac.h"
 
 static uint8_t sys_pwd[10]={0};
 static char sensor_data[1200]={0};
@@ -27,6 +30,13 @@ uint8_t debugss=0;
 extern uint8_t at_downlink_flag;
 extern __IO bool ble_sleep_flags;
 static char at_downlink_data[220]={0};
+
+#define HMAC_LEN 32
+
+static uint8_t hmac_key[] = {
+	// XXX
+};
+
 void product_information_print(void)
 {
 #ifdef NB_1D	
@@ -166,7 +176,7 @@ void BSP_sensor_Init( void  )
 {		
 	HAL_GPIO_WritePin(Power_5v_GPIO_Port, Power_5v_Pin, GPIO_PIN_RESET);
 	HAL_Delay(1000);
-	if((sys.mod==model1)||(sys.mod==model3))
+	if((sys.mod==model1)||(sys.mod==model3)||(sys.mod==model7))
   {
 		MX_I2C1_Init();
 		if(sht2x_Detect() == 1)
@@ -416,8 +426,7 @@ void txPayLoadDeal(SENSOR* Sensor)
 		sprintf(Sensor->data+strlen(Sensor->data), "%.8x", sensor.exit_count);
 	}
 	else if(sys.mod == model7)
-	{	
-		user_main_printf("rain pulse");
+	{
 		MX_I2C1_Init();
 		if(detect_flags == 1)
 			sht20Data();
@@ -493,15 +502,35 @@ void txPayLoadDeal(SENSOR* Sensor)
 		}		
 			sprintf(Sensor->data+strlen(Sensor->data), "%.8x", r_time);			
 		}				
-	
-		Sensor->data_len = strlen(Sensor->data);
+
+		size_t msg_len = strlen(Sensor->data);
+		size_t hmac_len = 32;
+		uint8_t hmac[HMAC_LEN] = {0};
+		cmox_mac_retval_t retval = cmox_mac_compute(CMOX_HMAC_SHA256_ALGO,     /* Use HMAC SHA256 algorithm */
+                            (uint8_t*)Sensor->data, msg_len,  /* Message to authenticate */
+                            hmac_key, sizeof(hmac_key),          /* HMAC Key to use */
+                            NULL, 0,                   /* Custom data */
+                            hmac,              /* Data buffer to receive generated authnetication tag */
+                            HMAC_LEN,      /* Expected authentication tag size */
+                            &hmac_len);       /* Generated tag size */
+
+	user_main_printf("Result of HMAC for payload %s (length %d): %d", Sensor->data, msg_len, retval);
+	for (int pos=0 ; pos<hmac_len ; pos++) {
+		sprintf(Sensor->data+msg_len+(pos*2), "%.2x", hmac[pos]);
+	}
+
+	Sensor->data[msg_len+hmac_len*2] = '\0';
 	if(sys.protocol == UDP_PRO || sys.protocol == TCP_PRO)
 	{
-	 Sensor->data_len = strlen(Sensor->data)/2;
+		Sensor->data_len = (msg_len+hmac_len*2)/2;
+	}
+	else
+	{
+		Sensor->data_len = msg_len+hmac_len*2;
 	}
 	
-	user_main_debug("Sensor->data:%s",Sensor->data);
-	user_main_debug("Sensor->data_len:%d",Sensor->data_len);
+	user_main_printf("Sensor->data:%s",Sensor->data);
+	user_main_printf("Sensor->data_len:%d",Sensor->data_len);
 	sys.exit_flag = 0;
 	HAL_GPIO_WritePin(Power_5v_GPIO_Port, Power_5v_Pin, GPIO_PIN_SET);
 	HAL_IWDG_Refresh(&hiwdg);
@@ -948,7 +977,7 @@ void shtDataWrite(void)
 {	
 	if(sys.sht_seq>=32)
 		sys.sht_seq = 0;
-  if(sys.mod == model1 ||sys.mod == model3)	
+  if(sys.mod == model1 ||sys.mod == model3||sys.mod == model7)	
 	{
 	uint32_t w_sht_data=tem_store<<16 | hum_store;	
 	user_main_debug("w_sht_data:%x",w_sht_data);
@@ -957,7 +986,7 @@ void shtDataWrite(void)
 	HAL_FLASHEx_DATAEEPROM_Lock();
 	}
 
-  if(sys.mod != model6)	
+  if(sys.mod != model6 && sys.mod != model7)	
 	{
 	uint32_t w_ad0_d1_data=adc0_datalog<<16 | ((int16_t)(ds1820_value*10)&0xFFFF);	
 	user_main_debug("w_sht_data:%x",w_ad0_d1_data);
@@ -1000,13 +1029,18 @@ void shtDataWrite(void)
   	else if(sys.mod ==model6)	
 	{
 	uint32_t w_count_data=sensor.exit_count;	
-	user_main_debug("w_sht_data:%x",w_count_data);
+	user_main_debug("w_count_data:%x",w_count_data);
 	HAL_FLASHEx_DATAEEPROM_Unlock();
 	HAL_FLASHEx_DATAEEPROM_Program(FLASH_TYPEPROGRAMDATA_WORD,EEPROM_COUNT_START_ADD +sys.sht_seq * 0x04,w_count_data);
 	HAL_FLASHEx_DATAEEPROM_Lock();			
 	}	
   	else if(sys.mod ==model7)	
 	{
+	uint32_t w_count_data=sensor.exit_count;	
+	user_main_debug("w_count_data:%x",w_count_data);
+	HAL_FLASHEx_DATAEEPROM_Unlock();
+	HAL_FLASHEx_DATAEEPROM_Program(FLASH_TYPEPROGRAMDATA_WORD,EEPROM_COUNT_START_ADD +sys.sht_seq * 0x04,w_count_data);
+	HAL_FLASHEx_DATAEEPROM_Lock();		
 	uint32_t w_intensity=sensor.intensity&0x0000FFFF;	
 	user_main_debug("w_intensity:%x",w_intensity);
 	HAL_FLASHEx_DATAEEPROM_Unlock();

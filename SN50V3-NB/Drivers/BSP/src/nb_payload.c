@@ -68,7 +68,8 @@ void pro_data_thingspeak(void)
 	else if(sys.mod == model7)
 	{
 	sprintf(buff1+strlen(buff1), "field4=%d",sensor.exit_count);
-	sprintf(buff1+strlen(buff1), "field5=%.1f&field6=%.1f",tem_value,hum_value);			
+	sprintf(buff1+strlen(buff1), "field5=%.1f&field6=%.1f",tem_value,hum_value);
+	sprintf(buff1+strlen(buff1), "field7=%.1f",(float)sensor.intensity/10.f);		
 	}
 	
 	sprintf(buff+strlen(buff), "%d,%s\r\n",strlen(buff1),buff1);	
@@ -257,7 +258,7 @@ sprintf(buff+strlen(buff), "\"interrupt_level\":%d,",sensor.exit_level);
 		int32_t Weight = Get_Weight();	
 	  WEIGHT_SCK_DeInit();
 	  WEIGHT_DOUT_DeInit();					
-	 sprintf(buff+strlen(buff), "\"weight\":%d",Weight);	
+	 sprintf(buff+strlen(buff), "\"weight\":%d",Weight);
 	}		
 	else if(sys.mod == model6)
 	{
@@ -265,8 +266,8 @@ sprintf(buff+strlen(buff), "\"interrupt_level\":%d,",sensor.exit_level);
 	}			
 	else if(sys.mod == model7)
 	{
-	sprintf(buff+strlen(buff), "\"temperature\":%.1f,\"humidity\":%.1f",tem_value,hum_value);	
-	sprintf(buff+strlen(buff), "\"count\":%d",sensor.exit_count);		
+	sprintf(buff+strlen(buff), "\"temperature\":%.1f,\"humidity\":%.1f,",tem_value,hum_value);	
+	sprintf(buff+strlen(buff), "\"count\":%d,",sensor.exit_count);		
 	sprintf(buff+strlen(buff), "\"intensity\":%.1f",(float)sensor.intensity/10.0);		
 	}	
 }

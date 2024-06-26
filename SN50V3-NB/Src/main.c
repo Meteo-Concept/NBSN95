@@ -32,6 +32,7 @@
 #include "lowpower.h"
 #include "nbInit.h"
 #include "hw_rtc.h"
+#include "cmox_crypto.h"
 //#include "low_power_manager.h"
 //#include "vcom.h"
 
@@ -210,7 +211,8 @@ int main(void)
 	My_UARTEx_StopModeWakeUp(&huart2);				//Enable serial port wake up
 	My_UARTEx_StopModeWakeUp(&hlpuart1);			//Enable serial port wake up
   TimerInit( &CalibrationtimeTimer, onCalibrationtimeEvent );
-	onCalibrationtimeEvent();	
+	onCalibrationtimeEvent();
+	cmox_initialize(NULL);
   /* USER CODE END 2 */
 	
   /* Infinite loop */
@@ -469,6 +471,7 @@ static void USERTASK(void)
 		memset((char*)nb.usart.data,0,sizeof(nb.usart.data));	
 		shtDataWrite();
 		tdc_clock_log_flag=0;
+		sensor.intensity = 0;
 	}
 	if(/*nb.recieve_flag == NB_RECIEVE &&*/ nb.dns_flag == running )
 	{
