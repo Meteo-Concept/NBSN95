@@ -536,6 +536,11 @@
               <FileType>1</FileType>
               <FilePath>..\Src\cmox_low_level.c</FilePath>
             </File>
+            <File>
+              <FileName>crc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\crc.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -821,6 +826,16 @@
               <FileName>stm32l0xx_hal_tim_ex.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_tim_ex.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32l0xx_hal_crc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\stm32l0xx_hal_crc.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32l0xx_hal_crc_ex.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\stm32l0xx_hal_crc_ex.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -3,6 +3,7 @@
 #include "cmox_low_level.h"
 #include "cmox_mac.h"
 #include "cmox_hmac.h"
+#include "crc.h"
 
 static uint8_t sys_pwd[10]={0};
 static char sensor_data[1200]={0};
@@ -506,12 +507,17 @@ void txPayLoadDeal(SENSOR* Sensor)
 		size_t msg_len = strlen(Sensor->data);
 		size_t hmac_len = 32;
 		uint8_t hmac[HMAC_LEN] = {0};
-		cmox_mac_retval_t retval = cmox_mac_compute(CMOX_HMAC_SHA256_ALGO,     /* Use HMAC SHA256 algorithm */
-                            (uint8_t*)Sensor->data, msg_len,  /* Message to authenticate */
-                            hmac_key, sizeof(hmac_key),          /* HMAC Key to use */
-                            NULL, 0,                   /* Custom data */
-                            hmac,              /* Data buffer to receive generated authnetication tag */
-                            HMAC_LEN,      /* Expected authentication tag size */
+
+		// The crypto library messes up with the CRC component, it's necessary to reset it
+		// and ensure it's on before computing HMACs
+		cmox_initialize(NULL);
+		__HAL_CRC_DR_RESET(&hcrc); // mandatory, otherwise the crypto library mangles the HMAC key
+		cmox_mac_retval_t retval = cmox_mac_compute(CMOX_HMAC_SHA256_ALGO,    /* Use HMAC SHA256 algorithm */
+                            (uint8_t*)Sensor->data, msg_len,  						/* Message to authenticate */
+                            hmac_key, sizeof(hmac_key),         				  /* HMAC Key to use */
+                            NULL, 0,          /* Custom data */
+                            hmac,             /* Data buffer to receive generated authentication tag */
+                            HMAC_LEN,      		/* Expected authentication tag size */
                             &hmac_len);       /* Generated tag size */
 
 	user_main_printf("Result of HMAC for payload %s (length %d): %d", Sensor->data, msg_len, retval);

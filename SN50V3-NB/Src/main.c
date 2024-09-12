@@ -25,6 +25,7 @@
 #include "iwdg.h"
 #include "usart.h"
 #include "gpio.h"
+#include "crc.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
