@@ -4,6 +4,7 @@
 #include "cmox_mac.h"
 #include "cmox_hmac.h"
 #include "crc.h"
+#include "hash/cmox_sha256.h"
 
 static uint8_t sys_pwd[10]={0};
 static char sensor_data[1200]={0};
@@ -31,8 +32,6 @@ uint8_t debugss=0;
 extern uint8_t at_downlink_flag;
 extern __IO bool ble_sleep_flags;
 static char at_downlink_data[220]={0};
-
-#define HMAC_LEN 32
 
 static uint8_t hmac_key[] = {
 	// XXX
@@ -505,34 +504,96 @@ void txPayLoadDeal(SENSOR* Sensor)
 		}				
 
 		size_t msg_len = strlen(Sensor->data);
-		size_t hmac_len = 32;
-		uint8_t hmac[HMAC_LEN] = {0};
+		uint32_t hmac_len = CMOX_SHA256_SIZE;
+		uint8_t hmac[CMOX_SHA256_SIZE] = {0};
 
 		// The crypto library messes up with the CRC component, it's necessary to reset it
 		// and ensure it's on before computing HMACs
+		__HAL_CRC_DR_RESET(&hcrc);
 		cmox_initialize(NULL);
-		__HAL_CRC_DR_RESET(&hcrc); // mandatory, otherwise the crypto library mangles the HMAC key
-		cmox_mac_retval_t retval = cmox_mac_compute(CMOX_HMAC_SHA256_ALGO,    /* Use HMAC SHA256 algorithm */
-                            (uint8_t*)Sensor->data, msg_len,  						/* Message to authenticate */
-                            hmac_key, sizeof(hmac_key),         				  /* HMAC Key to use */
-                            NULL, 0,          /* Custom data */
-                            hmac,             /* Data buffer to receive generated authentication tag */
-                            HMAC_LEN,      		/* Expected authentication tag size */
-                            &hmac_len);       /* Generated tag size */
+
+		cmox_hmac_handle_t hmac_ctx;
+		cmox_mac_retval_t retval;
+		uint8_t* msg = (uint8_t*)Sensor->data;
+		int index;
+		cmox_mac_handle_t* mac_ctx = cmox_hmac_construct(&hmac_ctx, CMOX_HMAC_SHA256);
+		if (mac_ctx == NULL) {
+			user_main_printf("Couldn't create MAC context");
+			goto end;
+		}
+		retval =  cmox_mac_init(mac_ctx);
+		if (retval != CMOX_MAC_SUCCESS) {
+			user_main_printf("Couldn't initialize MAC context");
+			goto end;
+		}
+		retval = cmox_mac_setKey(mac_ctx, hmac_key, sizeof(hmac_key));
+		if (retval != CMOX_MAC_SUCCESS) {
+			user_main_printf("Couldn't set HMAC key");
+			goto end;
+		}
+
+		for (index = 0; index < (msg_len - 40); index += 40)
+		{
+			retval = cmox_mac_append(mac_ctx, &msg[index], 40); /* Chunk of data to authenticate */
+			if (retval != CMOX_MAC_SUCCESS)
+			{
+				user_main_printf("Couldn't append message chunk");
+				goto end;
+			}
+		}
+
+		/* Append the last part of the message if needed */
+		if (index < msg_len)
+		{
+			retval = cmox_mac_append(mac_ctx, &msg[index], 40); /* Chunk of data to authenticate */
+			if (retval != CMOX_MAC_SUCCESS)
+			{
+				user_main_printf("Couldn't append message chunk");
+				goto end;
+			}
+	 }
+
+	 /* Generate the authentication tag */
+	 retval = cmox_mac_generateTag(mac_ctx, hmac, &hmac_len);
+
+  /* Verify API returned value */
+  if (retval != CMOX_MAC_SUCCESS)
+  {
+				user_main_printf("Couldn't generate tag");
+				goto end;
+  }
+
+  /* Verify generated data size is the expected one */
+  if (hmac_len != CMOX_SHA256_SIZE)
+  {
+				user_main_printf("Couldn't generate tag of proper size");
+				goto end;
+  }
 
 	user_main_printf("Result of HMAC for payload %s (length %d): %d", Sensor->data, msg_len, retval);
-	for (int pos=0 ; pos<hmac_len ; pos++) {
+
+	end:
+	if (mac_ctx) {
+		cmox_mac_cleanup(mac_ctx);
+	}
+	cmox_finalize(NULL);
+
+	/* The content of the HMAC is binary but the message is passed as a hex-encoded string
+	 * to the NB-IoT module, so we have to encode it */
+	for (int pos=0 ; pos<sizeof(hmac) ; pos++) {
 		sprintf(Sensor->data+msg_len+(pos*2), "%.2x", hmac[pos]);
 	}
+	Sensor->data[msg_len+sizeof(hmac)*2] = '\0';
 
-	Sensor->data[msg_len+hmac_len*2] = '\0';
+	/* For UDP and TCP, the server will receive binary data, for other protocols, it will
+	 * receive a hex-encoded string of that data */
 	if(sys.protocol == UDP_PRO || sys.protocol == TCP_PRO)
 	{
-		Sensor->data_len = (msg_len+hmac_len*2)/2;
+		Sensor->data_len = (msg_len+sizeof(hmac)*2)/2;
 	}
 	else
 	{
-		Sensor->data_len = msg_len+hmac_len*2;
+		Sensor->data_len = msg_len+sizeof(hmac)*2;
 	}
 	
 	user_main_printf("Sensor->data:%s",Sensor->data);

@@ -213,7 +213,7 @@ int main(void)
 	My_UARTEx_StopModeWakeUp(&hlpuart1);			//Enable serial port wake up
   TimerInit( &CalibrationtimeTimer, onCalibrationtimeEvent );
 	onCalibrationtimeEvent();
-	cmox_initialize(NULL);
+	MX_CRC_Init();
   /* USER CODE END 2 */
 	
   /* Infinite loop */
