@@ -459,6 +459,7 @@ ATEerror_t at_inmod_set(const char *param)
 	sys.inmod = param[(pos-param)+1];
 	if(sys.inmod != '0' && sys.inmod != '1' && sys.inmod != '2' && sys.inmod != '3')
 	{
+		sys.inmod = sys.mod == 7 ? '2' : '0';
 		return AT_PARAM_ERROR;
 	}
 	EX_GPIO_Init(sys.inmod-0x30);
@@ -1129,7 +1130,7 @@ void config_Get(void)
 	
 	sys.inmod = FLASH_read(add+12)>>24;
 	if(sys.inmod != '0' && sys.inmod != '1' && sys.inmod != '2' && sys.inmod != '3')
-		sys.inmod = '0';
+		sys.inmod = sys.mod == 7 ? '2' : '0';
 	EX_GPIO_Init(sys.inmod-0x30);
 	
 	sys.protocol = FLASH_read(add+12)>>16  & 0x000000FF;

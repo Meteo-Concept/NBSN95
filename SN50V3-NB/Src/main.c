@@ -309,7 +309,6 @@ int main(void)
 	
      if(at_sleep_flag==1 && nb.uplink_flag == no_status)
 		 {
-			  sys.inmod= '0';
 			 	EX_GPIO_Init(0);
 			 	at_sleep_flag=0;
 		   	sleep_status=1;
@@ -865,7 +864,6 @@ void user_key_event(void)
 			
 			case 2://sleep
 			{
-			  sys.inmod= '0';
 			 	EX_GPIO_Init(0);
 				sleep_status=1;
 			  TimerStop(&CheckBLETimesTimer);
