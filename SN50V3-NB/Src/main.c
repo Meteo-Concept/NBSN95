@@ -918,8 +918,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
       if (diff > LOCKOUT_INT_DELAY)
       {
             sensor.exit_count++;
+            uint16_t newIntensity = lastCountInt == 0 || diff > 3600000 ? 0 : 2 * 3600000 / diff;
             lastCountInt = TimerGetCurrentTime();
-            uint16_t newIntensity = 2 * 3600000 / diff;
+            user_main_printf("count is %d, now: %d, diff: %d, intensity: %d",sensor.exit_count, lastCountInt, diff, newIntensity);
             if (newIntensity > sensor.intensity)
             {
                  sensor.intensity = newIntensity;
