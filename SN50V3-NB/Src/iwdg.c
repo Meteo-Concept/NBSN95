@@ -1,21 +1,21 @@
 /**
-  ******************************************************************************
-  * @file    iwdg.c
-  * @brief   This file provides code for the configuration
-  *          of the IWDG instances.
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2021 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    iwdg.c
+ * @brief   This file provides code for the configuration
+ *          of the IWDG instances.
+ ******************************************************************************
+ * @attention
+ *
+ * <h2><center>&copy; Copyright (c) 2021 STMicroelectronics.
+ * All rights reserved.</center></h2>
+ *
+ * This software component is licensed by ST under BSD 3-Clause license,
+ * the "License"; You may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at:
+ *                        opensource.org/licenses/BSD-3-Clause
+ *
+ ******************************************************************************
+ */
 
 /* Includes ------------------------------------------------------------------*/
 #include "iwdg.h"
@@ -27,8 +27,7 @@
 IWDG_HandleTypeDef hiwdg;
 
 /* IWDG init function */
-void MX_IWDG_Init(void)
-{
+void MX_IWDG_Init(void) {
 
   /* USER CODE BEGIN IWDG_Init 0 */
 
@@ -41,14 +40,12 @@ void MX_IWDG_Init(void)
   hiwdg.Init.Prescaler = IWDG_PRESCALER_256;
   hiwdg.Init.Window = 4095;
   hiwdg.Init.Reload = 4095;
-  if (HAL_IWDG_Init(&hiwdg) != HAL_OK)
-  {
+  if (HAL_IWDG_Init(&hiwdg) != HAL_OK) {
     Error_Handler();
   }
   /* USER CODE BEGIN IWDG_Init 2 */
 
   /* USER CODE END IWDG_Init 2 */
-
 }
 
 /* USER CODE BEGIN 1 */

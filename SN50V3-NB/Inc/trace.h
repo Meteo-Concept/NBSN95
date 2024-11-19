@@ -48,8 +48,7 @@
 #define __DBG_TRACE_H
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #include "utilities_conf.h"
@@ -65,22 +64,24 @@ extern "C"
  * @param:  None
  * @retval: None
  */
-void TraceInit( void );
+void TraceInit(void);
 
 /**
- * @brief TraceSend decode the strFormat and post it to the circular queue for printing
+ * @brief TraceSend decode the strFormat and post it to the circular queue for
+ * printing
  *
  * @param:  None
  * @retval: 0 when ok, -1 when circular queue is full
  */
-//int32_t TraceSend( const char *strFormat, ...);
+// int32_t TraceSend( const char *strFormat, ...);
 
 /**
- * @brief  TraceGetFileName: Return filename string extracted from full path information
+ * @brief  TraceGetFileName: Return filename string extracted from full path
+ * information
  * @param  *fullPath Fullpath string (path + filename)
  * @retval char* Pointer on filename string
  */
-const char *TraceGetFileName( const char *fullpath );
+const char *TraceGetFileName(const char *fullpath);
 
 #ifdef __cplusplus
 }

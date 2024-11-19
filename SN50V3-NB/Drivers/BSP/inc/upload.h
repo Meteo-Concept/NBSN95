@@ -4,6 +4,6 @@
 #include "nbInit.h"
 
 NBState sockCreat(void);
-NBState dataSendUDP(char* payload);
+NBState dataSendUDP(char *payload);
 NBState sockClosd(void);
 #endif

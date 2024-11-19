@@ -13,9 +13,9 @@ uint8_t DS18B20_Presence(uint8_t num);
 uint8_t DS18B20_ReadBit(uint8_t num);
 uint8_t DS18B20_Read2Bit(uint8_t num);
 uint8_t DS18B20_ReadByte(uint8_t num);
-void DS18B20_WriteByte(uint8_t dat,uint8_t num);
+void DS18B20_WriteByte(uint8_t dat, uint8_t num);
 void DS18B20_SkipRom(uint8_t num);
-float DS18B20_GetTemp_SkipRom (uint8_t num);
-//void DS18B20_Search_Rom(void);
-//float DS18B20_Get_Temp(uint8_t i);
+float DS18B20_GetTemp_SkipRom(uint8_t num);
+// void DS18B20_Search_Rom(void);
+// float DS18B20_Get_Temp(uint8_t i);
 #endif

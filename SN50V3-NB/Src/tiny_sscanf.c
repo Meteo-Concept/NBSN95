@@ -1,10 +1,10 @@
-#include <stdio.h>
-#include <string.h>
+#include "tiny_sscanf.h"
+#include <inttypes.h>
 #include <stdarg.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <inttypes.h>
-#include "tiny_sscanf.h"
+#include <string.h>
 
 #define TINY_SSCANF
 #define TINY_NO_OX
@@ -14,25 +14,25 @@
 #include "floatio.h"
 #endif
 
-#define  BUF    513  /* Maximum length of numeric string. */
+#define BUF 513 /* Maximum length of numeric string. */
 
 /*
  * Flags used during conversion.
  */
-#define  LONG    0x00001  /* l: long or double */
-#define  SHORT    0x00004  /* h: short */
-#define  SHORTSHORT  0x00008  /* hh: 8 bit integer */
-#define  UNSIGNED  0x00800  /* %[oupxX] conversions */
+#define LONG 0x00001       /* l: long or double */
+#define SHORT 0x00004      /* h: short */
+#define SHORTSHORT 0x00008 /* hh: 8 bit integer */
+#define UNSIGNED 0x00800   /* %[oupxX] conversions */
 #ifdef TINY_SSCANF
 #else
-#define  LONGDBL    0x00002  /* L: long double; unimplemented */
-#define LLONG      0x00010  /* ll: long long (+ deprecated q: quad) */
-#define  POINTER    0x00020  /* p: void * (as hex) */
-#define  SIZEINT    0x00040  /* z: (signed) size_t */
-#define  MAXINT    0x00080  /* j: intmax_t */
-#define  PTRINT    0x00100  /* t: ptrdiff_t */
-#define  NOSKIP    0x00200  /* [ or c: do not skip blanks */
-#define  SUPPRESS  0x00400  /* *: suppress assignment */
+#define LONGDBL 0x00002  /* L: long double; unimplemented */
+#define LLONG 0x00010    /* ll: long long (+ deprecated q: quad) */
+#define POINTER 0x00020  /* p: void * (as hex) */
+#define SIZEINT 0x00040  /* z: (signed) size_t */
+#define MAXINT 0x00080   /* j: intmax_t */
+#define PTRINT 0x00100   /* t: ptrdiff_t */
+#define NOSKIP 0x00200   /* [ or c: do not skip blanks */
+#define SUPPRESS 0x00400 /* *: suppress assignment */
 #endif
 
 /*
@@ -40,30 +40,30 @@
  * SIGNOK, HAVESIGN, NDIGITS, DPTOK, and EXPOK are for floating point;
  * SIGNOK, HAVESIGN, NDIGITS, PFXOK, and NZDIGITS are for integral.
  */
-#define  SIGNOK    0x01000  /* +/- is (still) legal */
-#define  HAVESIGN  0x02000  /* sign detected */
-#define  NDIGITS    0x04000  /* no digits detected */
+#define SIGNOK 0x01000   /* +/- is (still) legal */
+#define HAVESIGN 0x02000 /* sign detected */
+#define NDIGITS 0x04000  /* no digits detected */
 
-#define  DPTOK    0x08000  /* (float) decimal point is still legal */
-#define  EXPOK    0x10000  /* (float) exponent (e+3, etc) still legal */
+#define DPTOK 0x08000 /* (float) decimal point is still legal */
+#define EXPOK 0x10000 /* (float) exponent (e+3, etc) still legal */
 
 #ifdef TINY_NO_OX
 #else
-#define  PFXOK    0x08000  /* 0x prefix is (still) legal */
-#define  NZDIGITS  0x10000  /* no zero digits detected */
+#define PFXOK 0x08000    /* 0x prefix is (still) legal */
+#define NZDIGITS 0x10000 /* no zero digits detected */
 #endif
 
 /*
  * Conversion types.
  */
-#define  CT_INT    3  /* integer, i.e., strtoimax or strtoumax */
-#define  CT_FLOAT  4  /* floating, i.e., strtod */
+#define CT_INT 3   /* integer, i.e., strtoimax or strtoumax */
+#define CT_FLOAT 4 /* floating, i.e., strtod */
 
 #ifdef TINY_SSCANF
 #else
-#define  CT_CHAR    0  /* %c conversion */
-#define  CT_CCL    1  /* %[...] conversion */
-#define  CT_STRING  2  /* %s conversion */
+#define CT_CHAR 0   /* %c conversion */
+#define CT_CCL 1    /* %[...] conversion */
+#define CT_STRING 2 /* %s conversion */
 #endif
 
 #define u_char unsigned char
@@ -77,55 +77,55 @@ static u_char *__sccl(char *, u_char *);
 #define VFSCANF tiny_vfscanf
 
 #if !defined(VFSCANF)
-#define VFSCANF  vfscanf
+#define VFSCANF vfscanf
 #endif
 
-
 #define __srefill(_x) 1
-#define ungetc(_c, _fp) do { (_c), fp_p--; fp_r++; } while (0)
-  
+#define ungetc(_c, _fp)                                                        \
+  do {                                                                         \
+    (_c), fp_p--;                                                              \
+    fp_r++;                                                                    \
+  } while (0)
+
 /*
  * vfscanf
  */
-static inline int
-VFSCANF(const char *str, const char *fmt0, __va_list ap)
-{
+static inline int VFSCANF(const char *str, const char *fmt0, __va_list ap) {
   u_char *fmt = (u_char *)fmt0;
-  int c;    /* character from format, or conversion */
+  int c;         /* character from format, or conversion */
   size_t width;  /* field width, or 0 */
-  char *p;  /* points into all kinds of strings */
-  int flags;  /* flags as defined above */
-  int nassigned;    /* number of fields assigned */
-  int nread;    /* number of characters consumed from fp */
-  int base;    /* base argument to strtoimax/strtouimax */
-  char buf[BUF];    /* buffer for numeric conversions */
+  char *p;       /* points into all kinds of strings */
+  int flags;     /* flags as defined above */
+  int nassigned; /* number of fields assigned */
+  int nread;     /* number of characters consumed from fp */
+  int base;      /* base argument to strtoimax/strtouimax */
+  char buf[BUF]; /* buffer for numeric conversions */
   const char *fp_p;
   int fp_r;
   uintmax_t value;
   int sign_minus;
 
-
 #ifdef TINY_SSCANF
 #else
-  int n;    /* handy integer */
-  char *p0;  /* saves original value of p when necessary */
-  char ccltab[256];  /* character class table for %[...] */
+  int n;            /* handy integer */
+  char *p0;         /* saves original value of p when necessary */
+  char ccltab[256]; /* character class table for %[...] */
 #endif
-  
+
   /* `basefix' is used to avoid `if' tests in the integer scanner */
 #ifdef TINY_SSCANF
   /* basefix[] can be removed as we do not support %i */
-#else  
-  static short basefix[17] =
-    { 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
+#else
+  static short basefix[17] = {10, 1,  2,  3,  4,  5,  6,  7, 8,
+                              9,  10, 11, 12, 13, 14, 15, 16};
 #endif
-    
-   fp_p = str;
+
+  fp_p = str;
   fp_r = strlen(str);
 
   nassigned = 0;
   nread = 0;
-  base = 0;    /* XXX just to keep gcc happy */
+  base = 0; /* XXX just to keep gcc happy */
   for (;;) {
     c = *fmt++;
     if (c == 0)
@@ -133,8 +133,7 @@ VFSCANF(const char *str, const char *fmt0, __va_list ap)
 #ifdef TINY_SPACE_NOT_SPECIALCASE
 #else
     if (isspace(c)) {
-      while ((fp_r > 0 || __srefill(fp) == 0) &&
-          isspace(*fp_p))
+      while ((fp_r > 0 || __srefill(fp) == 0) && isspace(*fp_p))
         nread++, fp_r--, fp_p++;
       continue;
     }
@@ -147,10 +146,11 @@ VFSCANF(const char *str, const char *fmt0, __va_list ap)
      * switch on the format.  continue if done;
      * break once format type is derived.
      */
-again:    c = *fmt++;
+  again:
+    c = *fmt++;
     switch (c) {
     case '%':
-literal:
+    literal:
       if (fp_r <= 0 && __srefill(fp))
         goto input_failure;
       if (*fp_p != c)
@@ -197,7 +197,7 @@ literal:
 #ifdef TINY_SSCANF
 #else
     case 'q':
-      flags |= LLONG;    /* deprecated */
+      flags |= LLONG; /* deprecated */
       goto again;
     case 't':
       flags |= PTRINT;
@@ -206,8 +206,16 @@ literal:
       flags |= SIZEINT;
       goto again;
 #endif
-    case '0': case '1': case '2': case '3': case '4':
-    case '5': case '6': case '7': case '8': case '9':
+    case '0':
+    case '1':
+    case '2':
+    case '3':
+    case '4':
+    case '5':
+    case '6':
+    case '7':
+    case '8':
+    case '9':
       width = width * 10 + c - '0';
       goto again;
 
@@ -218,7 +226,7 @@ literal:
      * (According to ANSI, E and X formats are supposed
      * to the same as e and x.  Sorry about that.)
      */
-    case 'D':  /* compat */
+    case 'D': /* compat */
       flags |= LONG;
       /* FALLTHROUGH */
     case 'd':
@@ -227,20 +235,20 @@ literal:
       break;
 
 #ifdef TINY_SSCANF
-    /*
-     * We do not support %i to remove potential base=8 in the following
-     * Hence basefix can be removed
-     */
+      /*
+       * We do not support %i to remove potential base=8 in the following
+       * Hence basefix can be removed
+       */
 #else
     case 'i':
       c = CT_INT;
       base = 0;
       break;
 #endif
-    
+
 #ifdef TINY_SSCANF
 #else
-    case 'O':  /* compat */
+    case 'O': /* compat */
       flags |= LONG;
       /* FALLTHROUGH */
     case 'o':
@@ -249,7 +257,7 @@ literal:
       base = 8;
       break;
 #endif
-    
+
     case 'u':
       c = CT_INT;
       flags |= UNSIGNED;
@@ -258,9 +266,9 @@ literal:
 
     case 'X':
     case 'x':
-#ifdef TINY_NO_OX 
+#ifdef TINY_NO_OX
 #else
-      flags |= PFXOK;  /* enable 0x prefixing */
+      flags |= PFXOK; /* enable 0x prefixing */
 #endif
       c = CT_INT;
       flags |= UNSIGNED;
@@ -270,8 +278,8 @@ literal:
 #ifdef FLOATING_POINT
     case 'E':
     case 'G':
-    case 'e': 
-    case 'f': 
+    case 'e':
+    case 'f':
     case 'g':
       c = CT_FLOAT;
       break;
@@ -294,7 +302,7 @@ literal:
       c = CT_CHAR;
       break;
 
-    case 'p':  /* pointer format is like hex */
+    case 'p': /* pointer format is like hex */
       flags |= POINTER | PFXOK;
       c = CT_INT;
       flags |= UNSIGNED;
@@ -326,10 +334,10 @@ literal:
     /*
      * Disgusting backwards compatibility hacks.  XXX
      */
-    case '\0':  /* compat */
+    case '\0': /* compat */
       return (EOF);
 
-    default:  /* compat */
+    default: /* compat */
 #ifdef TINY_SSCANF
 #else
       if (isupper(c))
@@ -346,11 +354,10 @@ literal:
     if (fp_r <= 0 && __srefill(fp))
       goto input_failure;
 
-    
-    /*
-     * Consume leading white space, except for formats
-     * that suppress this.
-     */
+      /*
+       * Consume leading white space, except for formats
+       * that suppress this.
+       */
 #ifdef TINY_SSCANF
 #else
     if ((flags & NOSKIP) == 0) {
@@ -368,7 +375,7 @@ literal:
        */
     }
 #endif
-    
+
     /*
      * Do the conversion.
      */
@@ -388,7 +395,7 @@ literal:
             fp_p += n;
             if (__srefill(fp)) {
               if (sum == 0)
-                  goto input_failure;
+                goto input_failure;
               break;
             }
           } else {
@@ -400,8 +407,7 @@ literal:
         }
         nread += sum;
       } else {
-        size_t r = fread((void *)va_arg(ap, char *), 1,
-            width, fp);
+        size_t r = fread((void *)va_arg(ap, char *), 1, width, fp);
 
         if (r == 0)
           goto input_failure;
@@ -410,13 +416,13 @@ literal:
       }
       break;
 #endif
-      
+
 #ifdef TINY_SSCANF
 #else
     case CT_CCL:
       /* scan a (nonempty) character class (sets NOSKIP) */
       if (width == 0)
-        width = (size_t)~0;  /* `infinity' */
+        width = (size_t)~0; /* `infinity' */
       /* take only those things in the class */
       if (flags & SUPPRESS) {
         n = 0;
@@ -454,7 +460,7 @@ literal:
       nread += n;
       break;
 #endif
-      
+
 #ifdef TINY_SSCANF
 #else
     case CT_STRING:
@@ -487,7 +493,7 @@ literal:
       }
       continue;
 #endif
-      
+
     case CT_INT:
       /* scan an integer as if by strtoimax/strtoumax */
 #ifdef hardway
@@ -505,7 +511,7 @@ literal:
 #else
       flags |= SIGNOK | NDIGITS | NZDIGITS;
 #endif
-      
+
       sign_minus = 0;
       value = 0;
       for (p = buf; width; width--) {
@@ -529,33 +535,39 @@ literal:
          * have scanned any nonzero digits).
          */
         case '0':
-#ifdef TINY_NO_OX 
+#ifdef TINY_NO_OX
           /* FALLTHROUGH */
-#else        
+#else
 #ifdef TINY_SSCANF
 #else
           if (base == 0) {
             base = 8;
             flags |= PFXOK;
           }
-#endif 
+#endif
           if (!(flags & NDIGITS)) {
             value = value * base;
           }
-          
+
           if (flags & NZDIGITS)
-              flags &= ~(SIGNOK|NZDIGITS|NDIGITS);
+            flags &= ~(SIGNOK | NZDIGITS | NDIGITS);
           else
-              flags &= ~(SIGNOK|PFXOK|NDIGITS);
+            flags &= ~(SIGNOK | PFXOK | NDIGITS);
           goto ok;
 #endif
-          
+
 #ifdef TINY_SSCANF
         /* we only support base 10 and 16 */
-        case '1': case '2': case '3':
-        case '4': case '5': case '6': case '7':
-        case '8': case '9':
-#ifdef TINY_NO_OX 
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+#ifdef TINY_NO_OX
           flags &= ~(SIGNOK | NDIGITS);
 #else
           flags &= ~(SIGNOK | PFXOK | NDIGITS);
@@ -564,43 +576,57 @@ literal:
           goto ok;
 #else
         /* 1 through 7 always legal */
-        case '1': case '2': case '3':
-        case '4': case '5': case '6': case '7':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
           base = basefix[base];
           flags &= ~(SIGNOK | PFXOK | NDIGITS);
           value = value * base + c - '0';
           goto ok;
 
         /* digits 8 and 9 ok iff decimal or hex */
-        case '8': case '9':
+        case '8':
+        case '9':
           base = basefix[base];
           if (base <= 8)
-            break;  /* not legal here */
+            break; /* not legal here */
           flags &= ~(SIGNOK | PFXOK | NDIGITS);
           value = value * base + c - '0';
           goto ok;
 #endif
-          
+
         /* letters ok iff hex */
-        case 'A': case 'B': case 'C':
-        case 'D': case 'E': case 'F':
+        case 'A':
+        case 'B':
+        case 'C':
+        case 'D':
+        case 'E':
+        case 'F':
           /* no need to fix base here */
           if (base <= 10)
-            break;  /* not legal here */
-#ifdef TINY_NO_OX 
+            break; /* not legal here */
+#ifdef TINY_NO_OX
           flags &= ~(SIGNOK | NDIGITS);
 #else
           flags &= ~(SIGNOK | PFXOK | NDIGITS);
 #endif
           value = value * base + c - 'A' + 10;
-          goto ok;          
-        
-        case 'a': case 'b': case 'c':
-        case 'd': case 'e': case 'f':
+          goto ok;
+
+        case 'a':
+        case 'b':
+        case 'c':
+        case 'd':
+        case 'e':
+        case 'f':
           /* no need to fix base here */
           if (base <= 10)
-            break;  /* not legal here */
-#ifdef TINY_NO_OX 
+            break; /* not legal here */
+#ifdef TINY_NO_OX
           flags &= ~(SIGNOK | NDIGITS);
 #else
           flags &= ~(SIGNOK | PFXOK | NDIGITS);
@@ -622,16 +648,16 @@ literal:
           }
           break;
 
-        /*
-         * x ok iff flag still set and 2nd char (or
-         * 3rd char if we have a sign).
-         */
+          /*
+           * x ok iff flag still set and 2nd char (or
+           * 3rd char if we have a sign).
+           */
 #ifdef TINY_NO_OX
 #else
-        case 'x': case 'X':
-          if ((flags & PFXOK) && p ==
-              buf + 1 + !!(flags & HAVESIGN)) {
-            base = 16;  /* if %i */
+        case 'x':
+        case 'X':
+          if ((flags & PFXOK) && p == buf + 1 + !!(flags & HAVESIGN)) {
+            base = 16; /* if %i */
             flags &= ~PFXOK;
             goto ok;
           }
@@ -644,7 +670,7 @@ literal:
          * for a number.  Stop accumulating digits.
          */
         break;
-    ok:
+      ok:
         /*
          * c is legal: store it and look at the next.
          */
@@ -652,7 +678,7 @@ literal:
         if (--fp_r > 0)
           fp_p++;
         else if (__srefill(fp))
-          break;    /* EOF */
+          break; /* EOF */
       }
       /*
        * If we had only a sign, it is no good; push
@@ -661,17 +687,16 @@ literal:
        * and treat it as [sign] '0'.
        */
       if (flags & NDIGITS) {
-        if (p > buf)
-        {
+        if (p > buf) {
           --c;
           --p;
           ungetc(c++, fp);
-          /* There is a dummy post-increment to 
+          /* There is a dummy post-increment to
              avoid an unused value warning */
         }
         goto match_failure;
       }
-#ifdef TINY_NO_OX 
+#ifdef TINY_NO_OX
 #else
       c = ((u_char *)p)[-1];
       if (c == 'x' || c == 'X') {
@@ -679,7 +704,7 @@ literal:
         ungetc(c, fp);
       }
 #endif
-      
+
 #ifdef TINY_SSCANF
       {
 #else
@@ -693,8 +718,7 @@ literal:
 #ifdef TINY_SSCANF
 #else
         if (flags & POINTER)
-          *va_arg(ap, void **) =
-              (void *)(uintptr_t)value;
+          *va_arg(ap, void **) = (void *)(uintptr_t)value;
         else if (flags & MAXINT)
           *va_arg(ap, intmax_t *) = value;
         else if (flags & LLONG)
@@ -703,7 +727,7 @@ literal:
           *va_arg(ap, size_t *) = value;
         else if (flags & PTRINT)
           *va_arg(ap, ptrdiff_t *) = value;
-        else 
+        else
 #endif
         if (flags & LONG)
           *va_arg(ap, long *) = value;
@@ -739,13 +763,21 @@ literal:
          */
         switch (c) {
 
-        case '0': case '1': case '2': case '3':
-        case '4': case '5': case '6': case '7':
-        case '8': case '9':
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
           flags &= ~(SIGNOK | NDIGITS);
           goto fok;
 
-        case '+': case '-':
+        case '+':
+        case '-':
           if (flags & SIGNOK) {
             flags &= ~SIGNOK;
             goto fok;
@@ -757,23 +789,22 @@ literal:
             goto fok;
           }
           break;
-        case 'e': case 'E':
+        case 'e':
+        case 'E':
           /* no exponent without some digits */
-          if ((flags&(NDIGITS|EXPOK)) == EXPOK) {
-            flags =
-                (flags & ~(EXPOK|DPTOK)) |
-                SIGNOK | NDIGITS;
+          if ((flags & (NDIGITS | EXPOK)) == EXPOK) {
+            flags = (flags & ~(EXPOK | DPTOK)) | SIGNOK | NDIGITS;
             goto fok;
           }
           break;
         }
         break;
-    fok:
+      fok:
         *p++ = c;
         if (--fp->_r > 0)
           fp->_p++;
         else if (__srefill(fp))
-          break;  /* EOF */
+          break; /* EOF */
       }
       /*
        * If no digits, might be missing exponent digits
@@ -790,16 +821,16 @@ literal:
         /* just a bad exponent (e and maybe sign) */
         c = *(u_char *)--p;
         if (c != 'e' && c != 'E') {
-          (void) ungetc(c, fp);/* sign */
+          (void)ungetc(c, fp); /* sign */
           c = *(u_char *)--p;
         }
-        (void) ungetc(c, fp);
+        (void)ungetc(c, fp);
       }
       if ((flags & SUPPRESS) == 0) {
         double res;
 
         *p = '\0';
-        res = strtod(buf, (char **) NULL);
+        res = strtod(buf, (char **)NULL);
         if (flags & LONGDBL)
           *va_arg(ap, long double *) = res;
         else if (flags & LONG)
@@ -827,23 +858,21 @@ match_failure:
  * closing `]'.  The table has a 1 wherever characters should be
  * considered part of the scanset.
  */
-static u_char *
-__sccl(char *tab, u_char *fmt)
-{
+static u_char *__sccl(char *tab, u_char *fmt) {
   int c, n, v;
 
   /* first `clear' the whole table */
-  c = *fmt++;    /* first char hat => negated scanset */
+  c = *fmt++; /* first char hat => negated scanset */
   if (c == '^') {
-    v = 1;    /* default => accept */
-    c = *fmt++;  /* get new first char */
+    v = 1;      /* default => accept */
+    c = *fmt++; /* get new first char */
   } else
-    v = 0;    /* default => reject */
+    v = 0; /* default => reject */
   /* should probably use memset here */
   for (n = 0; n < 256; n++)
     tab[n] = v;
   if (c == 0)
-    return (fmt - 1);/* format ended before closing ] */
+    return (fmt - 1); /* format ended before closing ] */
 
   /*
    * Now set the entries corresponding to the actual scanset
@@ -854,12 +883,12 @@ __sccl(char *tab, u_char *fmt)
    */
   v = 1 - v;
   for (;;) {
-    tab[c] = v;    /* take character c */
-doswitch:
-    n = *fmt++;    /* and examine the next */
+    tab[c] = v; /* take character c */
+  doswitch:
+    n = *fmt++; /* and examine the next */
     switch (n) {
 
-    case 0:      /* format ended too soon */
+    case 0: /* format ended too soon */
       return (fmt - 1);
 
     case '-':
@@ -884,13 +913,13 @@ doswitch:
       n = *fmt;
       if (n == ']' || n < c) {
         c = '-';
-        break;  /* resume the for(;;) */
+        break; /* resume the for(;;) */
       }
       fmt++;
-      do {    /* fill in the range */
+      do { /* fill in the range */
         tab[++c] = v;
       } while (c < n);
-#if 1  /* XXX another disgusting compatibility hack */
+#if 1 /* XXX another disgusting compatibility hack */
       /*
        * Alas, the V7 Unix scanf also treats formats
        * such as [a-c-e] as `the letters a through e'.
@@ -906,10 +935,10 @@ doswitch:
 #endif
       break;
 
-    case ']':    /* end of scanset */
+    case ']': /* end of scanset */
       return (fmt);
 
-    default:    /* just another character */
+    default: /* just another character */
       c = n;
       break;
     }
@@ -918,17 +947,14 @@ doswitch:
 }
 #endif
 
-int
-tiny_sscanf(const char *str, const char *fmt, ...)
-{
+int tiny_sscanf(const char *str, const char *fmt, ...) {
   int ret;
   va_list ap;
-  
+
   va_start(ap, fmt);
   ret = tiny_vfscanf(str, fmt, ap);
   va_end(ap);
   return (ret);
 }
-
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

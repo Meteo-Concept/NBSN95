@@ -46,8 +46,8 @@
  */
 
 /* Includes ------------------------------------------------------------------*/
-#include "hw.h"
 #include "low_power_manager.h"
+#include "hw.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private defines -----------------------------------------------------------*/
@@ -59,83 +59,66 @@ static uint32_t OffModeDisable = 0;
 /* Global variables ----------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 /* Functions Definition ------------------------------------------------------*/
-void LPM_SetOffMode(LPM_Id_t id, LPM_SetMode_t mode)
-{
+void LPM_SetOffMode(LPM_Id_t id, LPM_SetMode_t mode) {
   BACKUP_PRIMASK();
-  
-  DISABLE_IRQ( );
-  
-  
-  switch(mode)
-  {
-    case LPM_Disable:
-    {
-      OffModeDisable |= (uint32_t)id;
-      break;
-    }
-    case LPM_Enable:
-    {
-      OffModeDisable &= ~(uint32_t)id;
-      break;
-    }
-    default:
-      break;
+
+  DISABLE_IRQ();
+
+  switch (mode) {
+  case LPM_Disable: {
+    OffModeDisable |= (uint32_t)id;
+    break;
   }
-  
-  RESTORE_PRIMASK( );
+  case LPM_Enable: {
+    OffModeDisable &= ~(uint32_t)id;
+    break;
+  }
+  default:
+    break;
+  }
+
+  RESTORE_PRIMASK();
 
   return;
 }
 
-void LPM_SetStopMode(LPM_Id_t id, LPM_SetMode_t mode)
-{
+void LPM_SetStopMode(LPM_Id_t id, LPM_SetMode_t mode) {
   BACKUP_PRIMASK();
-  
-  DISABLE_IRQ( );
-  
-  
-  switch(mode)
-  {
-    case LPM_Disable:
-    {
-      StopModeDisable |= (uint32_t)id;
-      break;
-    }
-    case LPM_Enable:
-    {
-      StopModeDisable &= ~(uint32_t)id;
-      break;
-    }
-    default:
-      break;
+
+  DISABLE_IRQ();
+
+  switch (mode) {
+  case LPM_Disable: {
+    StopModeDisable |= (uint32_t)id;
+    break;
   }
-  RESTORE_PRIMASK( );
+  case LPM_Enable: {
+    StopModeDisable &= ~(uint32_t)id;
+    break;
+  }
+  default:
+    break;
+  }
+  RESTORE_PRIMASK();
 
   return;
 }
 
-void LPM_EnterLowPower(void)
-{
-  if( StopModeDisable )
-  {
+void LPM_EnterLowPower(void) {
+  if (StopModeDisable) {
     /**
      * SLEEP mode is required
      */
     LPM_EnterSleepMode();
     LPM_ExitSleepMode();
-  }
-  else
-  { 
-    if( OffModeDisable )
-    {
+  } else {
+    if (OffModeDisable) {
       /**
        * STOP mode is required
        */
       LPM_EnterStopMode();
       LPM_ExitStopMode();
-    }
-    else
-    {
+    } else {
       /**
        * OFF mode is required
        */
@@ -147,31 +130,24 @@ void LPM_EnterLowPower(void)
   return;
 }
 
-LPM_GetMode_t LPM_GetMode(void)
-{
+LPM_GetMode_t LPM_GetMode(void) {
   LPM_GetMode_t mode_selected;
 
   BACKUP_PRIMASK();
-  
-  DISABLE_IRQ( );
 
-  if(StopModeDisable )
-  {
+  DISABLE_IRQ();
+
+  if (StopModeDisable) {
     mode_selected = LPM_SleepMode;
-  }
-  else
-  {
-    if(OffModeDisable)
-    {
+  } else {
+    if (OffModeDisable) {
       mode_selected = LPM_StopMode;
-    }
-    else
-    {
+    } else {
       mode_selected = LPM_OffMode;
     }
   }
 
-  RESTORE_PRIMASK( );
+  RESTORE_PRIMASK();
 
   return mode_selected;
 }
@@ -182,6 +158,5 @@ __weak void LPM_EnterStopMode(void) {}
 __weak void LPM_ExitStopMode(void) {}
 __weak void LPM_EnterOffMode(void) {}
 __weak void LPM_ExitOffMode(void) {}
-
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

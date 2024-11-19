@@ -1,22 +1,22 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : main.h
-  * @brief          : Header for main.c file.
-  *                   This file contains the common defines of the application.
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : main.h
+ * @brief          : Header for main.c file.
+ *                   This file contains the common defines of the application.
+ ******************************************************************************
+ * @attention
+ *
+ * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
+ * All rights reserved.</center></h2>
+ *
+ * This software component is licensed by ST under BSD 3-Clause license,
+ * the "License"; You may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at:
+ *                        opensource.org/licenses/BSD-3-Clause
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
@@ -58,23 +58,24 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define LED_RGB_PORT   GPIOB
-#define LED_RED_PIN    GPIO_PIN_13
-#define LED_GREEN_PIN  GPIO_PIN_14
-#define LED_BLUE_PIN   GPIO_PIN_12
+#define LED_RGB_PORT GPIOB
+#define LED_RED_PIN GPIO_PIN_13
+#define LED_GREEN_PIN GPIO_PIN_14
+#define LED_BLUE_PIN GPIO_PIN_12
 
-#define GPIO_USERKEY_PORT                GPIOA
-#define GPIO_USERKEY_PIN                 GPIO_PIN_7
+#define GPIO_USERKEY_PORT GPIOA
+#define GPIO_USERKEY_PIN GPIO_PIN_7
 
-/* ---------------------------  DX-BT24_pin definition -------------------------------*/
-#define DX_BT24_CLK_ENABLE()		  __HAL_RCC_GPIOA_CLK_ENABLE()
-#define DX_BT24_PORT          	GPIOA
-#define DX_BT24_RST_PIN    	  	GPIO_PIN_12
-#define DX_BT24_KEY_PIN    	  	GPIO_PIN_11
-#define DX_BT24_STATUS_ENABLE()	  __HAL_RCC_GPIOA_CLK_ENABLE()
-#define DX_BT24_STATUS_PORT     GPIOA
-#define DX_BT24_LINK_PIN    	  GPIO_PIN_5 
-#define DX_BT24_WORK_PIN    	  GPIO_PIN_6
+/* ---------------------------  DX-BT24_pin definition
+ * -------------------------------*/
+#define DX_BT24_CLK_ENABLE() __HAL_RCC_GPIOA_CLK_ENABLE()
+#define DX_BT24_PORT GPIOA
+#define DX_BT24_RST_PIN GPIO_PIN_12
+#define DX_BT24_KEY_PIN GPIO_PIN_11
+#define DX_BT24_STATUS_ENABLE() __HAL_RCC_GPIOA_CLK_ENABLE()
+#define DX_BT24_STATUS_PORT GPIOA
+#define DX_BT24_LINK_PIN GPIO_PIN_5
+#define DX_BT24_WORK_PIN GPIO_PIN_6
 
 #define Power_5v_Pin GPIO_PIN_5
 #define Power_5v_GPIO_Port GPIOB
